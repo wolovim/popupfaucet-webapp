@@ -1,0 +1,28 @@
+.stats-container {
+  margin-bottom: var(--space-lg);
+}
+
+.stats-container h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.faucet-count {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background-color: var(--bg-accent);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+}
+
+.stats-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  max-width: 600px;
+  line-height: 1.5;
+} 

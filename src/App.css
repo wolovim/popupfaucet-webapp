@@ -1,0 +1,597 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Refined Electric Eel color palette */
+  /* Light mode colors (refined electric eel) */
+  --light-primary: #0ea5e9; /* Sky blue */
+  --light-primary-light: #7dd3fc; /* Light sky blue */
+  --light-primary-dark: #0284c7; /* Deep sky blue */
+  --light-success: #10b981; /* Emerald green */
+  --light-success-light: #34d399; /* Light emerald */
+  --light-warning: #f59e0b; /* Amber */
+  --light-warning-light: #fbbf24; /* Light amber */
+  --light-danger: #ef4444; /* Red */
+  --light-danger-light: #f87171; /* Light red */
+  --light-neutral: #6b7280; /* Gray */
+  --light-neutral-light: #9ca3af; /* Light gray */
+  --light-neutral-dark: #4b5563; /* Dark gray */
+  --light-bg-main: #f0f9ff; /* Light blue white */
+  --light-bg-card: #ffffff; /* White */
+  --light-bg-input: #ffffff; /* White */
+  --light-bg-accent: #e0f2fe; /* Light sky blue */
+  --light-text-primary: #0f172a; /* Slate */
+  --light-text-secondary: #334155; /* Medium slate */
+  --light-text-muted: #64748b; /* Light slate */
+  --light-text-light: #ffffff; /* White */
+  
+  /* Dark mode colors (refined electric eel) */
+  --dark-primary: #0ea5e9; /* Sky blue */
+  --dark-primary-light: #7dd3fc; /* Light sky blue */
+  --dark-primary-dark: #0284c7; /* Deep sky blue */
+  --dark-success: #10b981; /* Emerald green */
+  --dark-success-light: #34d399; /* Light emerald */
+  --dark-warning: #f59e0b; /* Amber */
+  --dark-warning-light: #fbbf24; /* Light amber */
+  --dark-danger: #ef4444; /* Red */
+  --dark-danger-light: #f87171; /* Light red */
+  --dark-neutral: #9ca3af; /* Gray */
+  --dark-neutral-light: #d1d5db; /* Light gray */
+  --dark-neutral-dark: #6b7280; /* Dark gray */
+  --dark-bg-main: #0f172a; /* Dark slate blue */
+  --dark-bg-card: #1e293b; /* Slate blue */
+  --dark-bg-input: #334155; /* Medium slate blue */
+  --dark-bg-accent: #1e293b; /* Slate blue */
+  --dark-text-primary: #f8fafc; /* Off-white */
+  --dark-text-secondary: #e2e8f0; /* Light gray */
+  --dark-text-muted: #cbd5e1; /* Medium gray */
+  --dark-text-light: #ffffff; /* White */
+  
+  /* Default to dark mode */
+  --primary: var(--dark-primary);
+  --primary-light: var(--dark-primary-light);
+  --primary-dark: var(--dark-primary-dark);
+  --success: var(--dark-success);
+  --success-light: var(--dark-success-light);
+  --warning: var(--dark-warning);
+  --warning-light: var(--dark-warning-light);
+  --danger: var(--dark-danger);
+  --danger-light: var(--dark-danger-light);
+  --neutral: var(--dark-neutral);
+  --neutral-light: var(--dark-neutral-light);
+  --neutral-dark: var(--dark-neutral-dark);
+  --bg-main: var(--dark-bg-main);
+  --bg-card: var(--dark-bg-card);
+  --bg-input: var(--dark-bg-input);
+  --bg-accent: var(--dark-bg-accent);
+  --text-primary: var(--dark-text-primary);
+  --text-secondary: var(--dark-text-secondary);
+  --text-muted: var(--dark-text-muted);
+  --text-light: var(--dark-text-light);
+  
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light mode class */
+.light-mode {
+  --primary: var(--light-primary);
+  --primary-light: var(--light-primary-light);
+  --primary-dark: var(--light-primary-dark);
+  --success: var(--light-success);
+  --success-light: var(--light-success-light);
+  --warning: var(--light-warning);
+  --warning-light: var(--light-warning-light);
+  --danger: var(--light-danger);
+  --danger-light: var(--light-danger-light);
+  --neutral: var(--light-neutral);
+  --neutral-light: var(--light-neutral-light);
+  --neutral-dark: var(--light-neutral-dark);
+  --bg-main: var(--light-bg-main);
+  --bg-card: var(--light-bg-card);
+  --bg-input: var(--light-bg-input);
+  --bg-accent: var(--light-bg-accent);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --text-muted: var(--light-text-muted);
+  --text-light: var(--light-text-light);
+}
+
+/* Refined background pattern */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(circle at 25px 25px, rgba(14, 165, 233, 0.1) 2%, transparent 0%),
+    radial-gradient(circle at 75px 75px, rgba(16, 185, 129, 0.05) 2%, transparent 0%);
+  background-size: 100px 100px;
+  background-position: 0 0;
+  background-attachment: fixed;
+  background-blend-mode: soft-light;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Center the entire application */
+#root {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1000px;
+  width: 100%;
+  padding: var(--space-xl);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header, main, footer, .tab-navigation {
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  padding: 0 0 var(--space-lg) 0;
+  background-color: var(--bg-main);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary);
+  position: relative;
+  margin: 0;
+  padding: 0;
+  line-height: 0.9;
+  transform: translateY(6px);
+}
+
+h1::after {
+  content: "";
+  position: absolute;
+  font-size: 1.2rem;
+  top: -5px;
+  right: -25px;
+  transform: rotate(-15deg);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: rotate(-15deg) translateY(0); }
+  50% { transform: rotate(-10deg) translateY(-5px); }
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.left-column, .right-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: var(--space-md);
+  color: var(--text-primary);
+}
+
+p {
+  margin-bottom: var(--space-md);
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+  transition: all var(--transition-fast);
+  background-color: var(--primary);
+  color: var(--text-light);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  padding: var(--space-md);
+  border: 1px solid var(--neutral-light);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-input);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  width: 100%;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-normal);
+  overflow: hidden;
+  position: relative;
+  text-align: left;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Refined card gradient */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+}
+
+/* Form styling */
+.form-group {
+  margin-bottom: var(--space-lg);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Refined wallet connect styling */
+.wallet-connect {
+  display: flex;
+  align-items: center;
+}
+
+/* Style for when wallet is connected */
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-accent);
+  border-radius: var(--radius-full);
+  padding: 0;
+  overflow: hidden;
+}
+
+.wallet-address {
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.875rem;
+  font-family: monospace;
+  color: var(--text-secondary);
+  min-width: 120px; /* Ensure enough space for address */
+}
+
+.disconnect-button {
+  background-color: var(--primary);
+  color: var(--text-light);
+  border-top-left-radius: var(--radius-full);
+  border-bottom-left-radius: var(--radius-full);
+  border-top-right-radius: var(--radius-full);
+  border-bottom-right-radius: var(--radius-full);
+  padding: var(--space-sm) var(--space-md);
+  font-weight: 600;
+  margin-left: -10px; /* Create overlap effect */
+  position: relative;
+  z-index: 1; /* Ensure button is above the address background */
+}
+
+.disconnect-button:hover {
+  background-color: var(--primary-dark);
+  transform: none;
+}
+
+/* Style for connect button when not connected */
+.connect-button {
+  background-color: var(--primary);
+  color: var(--text-light);
+  border-radius: var(--radius-full);
+  padding: var(--space-sm) var(--space-lg);
+  font-weight: 600;
+}
+
+.connect-button:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+/* Status messages */
+.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+  border-left: 4px solid var(--danger);
+  font-weight: 500;
+}
+
+.success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-md);
+  border-left: 4px solid var(--success);
+  font-weight: 500;
+}
+
+/* Footer styling */
+footer {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+.footer-link {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.footer-link:hover {
+  color: var(--primary-dark);
+}
+
+/* Animation for elements appearing */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app {
+    padding: var(--space-md);
+  }
+  
+  main {
+    grid-template-columns: 1fr;
+  }
+  
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+  
+  .wallet-connect {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: var(--space-lg);
+  }
+  
+  .wallet-connect span {
+    display: none;
+  }
+}
+
+.faucet-count {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background-color: var(--bg-accent);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  height: 28px;
+  transform: translateY(1px);
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Ensure faucet details card has consistent height */
+.faucet-details-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make search form take minimal space when empty */
+.search-form {
+  margin-bottom: var(--space-xl);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Make faucet info container expand to fill space */
+.faucet-info-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Redesigned tab navigation */
+.tab-navigation {
+  display: flex;
+  margin-bottom: var(--space-xl);
+  gap: var(--space-md);
+  background-color: var(--bg-accent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-button {
+  flex: 1;
+  padding: var(--space-md);
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+/* Improve tab button hover contrast in dark mode */
+.tab-button:hover:not(.active) {
+  color: var(--primary-light);
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: none;
+}
+
+/* Ensure active tab has good contrast */
+.tab-button.active {
+  color: var(--text-light);
+  background-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Tab Content */
+.tab-content {
+  flex: 1;
+  width: 100%;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Ensure cards are centered */
+.faucet-details-card, .create-faucet-card {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-left: auto; /* Ensures controls are pushed to the right */
+}
+
+/* Add secondary button styling to App.css */
+.secondary-button {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--neutral-light);
+  box-shadow: none;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  border-color: var(--primary-light);
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: var(--neutral-light);
+  color: var(--text-muted);
+} 
