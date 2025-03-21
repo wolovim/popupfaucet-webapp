@@ -21,6 +21,7 @@ export default function FaucetDetails() {
   const [error, setError] = useState(null);
   const [fetchAttempted, setFetchAttempted] = useState(false);
   const [compactSearch, setCompactSearch] = useState(false);
+  const [showTopup, setShowTopup] = useState(false);
 
   // Read contract data - only enabled when we have a currentFaucetName (after button click)
   const { data: faucetData, refetch, isError, error: readError, isLoading: isReadLoading } = useReadContract({
@@ -53,6 +54,7 @@ export default function FaucetDetails() {
     setError(null);
     setFetchAttempted(false);
     setCompactSearch(false);
+    setShowTopup(false);
   }, [selectedNetwork]);
 
   // Update faucet details when data changes
@@ -245,6 +247,7 @@ export default function FaucetDetails() {
   };
 
   const handleNewSearch = () => {
+    setShowTopup(false);
     setCompactSearch(false);
     setFaucetName('');
     setCurrentFaucetName('');
@@ -311,23 +314,28 @@ export default function FaucetDetails() {
             
             <div className="form-group">
               <label htmlFor="faucet-name">Faucet Name</label>
-              <div className="search-input-container">
-                <input
-                  id="faucet-name"
-                  type="text"
-                  value={faucetName}
-                  onChange={(e) => setFaucetName(e.target.value)}
-                  placeholder="Enter faucet name"
-                  disabled={loading}
-                />
-                <button 
-                  onClick={handleFetchFaucet}
-                  disabled={!faucetName.trim() || loading}
-                  className="search-button app-button"
-                >
-                  {loading ? <span className="loading-spinner">🌀</span> : '🔍'}
-                </button>
-              </div>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                handleFetchFaucet(e);
+              }}>
+                <div className="search-input-container">
+                  <input
+                    id="faucet-name"
+                    type="text"
+                    value={faucetName}
+                    onChange={(e) => setFaucetName(e.target.value)}
+                    placeholder="Enter faucet name"
+                    disabled={loading}
+                  />
+                  <button 
+                    type="submit"
+                    disabled={!faucetName.trim() || loading}
+                    className="search-button app-button"
+                  >
+                    {loading ? <span className="loading-spinner">🌀</span> : '🔍'}
+                  </button>
+                </div>
+              </form>
             </div>
           </>
         )}
@@ -351,13 +359,12 @@ export default function FaucetDetails() {
           <div className="faucet-info-container">
             <div className="faucet-header">
               <h3 className="faucet-name">{currentFaucetName}</h3>
-              <div className="faucet-status-container">
-                <span className={`faucet-status ${faucetDetails.paused ? 'status-paused' : 'status-active'}`}>
-                  {faucetDetails.paused ? 'Paused' : 'Active'}
-                </span>
-                <span className="faucet-network">
-                  <span className="network-dot"></span>
+              <div className="wallet-connected faucet-status-pill">
+                <span className="network-name">
                   {SUPPORTED_NETWORKS[selectedNetwork]?.name || selectedNetwork}
+                </span>
+                <span className={`status-badge ${faucetDetails.paused ? 'status-paused' : 'status-active'}`}>
+                  {faucetDetails.paused ? 'Paused' : 'Active'}
                 </span>
               </div>
             </div>
@@ -392,57 +399,75 @@ export default function FaucetDetails() {
             
             <div className="actions-container">
               <div className="action-panels">
-                <div className="action-panel-row">
-                  <div className="action-panel">
-                    <input
-                      type="text"
-                      className="action-input"
-                      placeholder="Enter recipient address"
-                      value={recipientAddress}
-                      onChange={(e) => setRecipientAddress(e.target.value)}
-                      required
-                    />
-                    <button 
-                      onClick={handleDrip}
-                      className="action-button drip-button app-button"
-                      disabled={isDripPending || isDripConfirming}
-                    >
-                      {isDripPending || isDripConfirming ? 
-                        <span className="loading-spinner">🌀</span> : 
-                        'Drip'
-                      }
-                    </button>
-                  </div>
-                  
-                  {address ? (
-                    <div className="action-panel">
+                <div className="drip-panel">
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (recipientAddress) handleDrip();
+                  }}>
+                    <div className="drip-input-container">
                       <input
                         type="text"
-                        className="action-input"
-                        placeholder="Amount in ETH"
-                        value={topupAmount}
-                        onChange={(e) => setTopupAmount(e.target.value)}
+                        className="drip-input"
+                        placeholder="Enter recipient address"
+                        value={recipientAddress}
+                        onChange={(e) => setRecipientAddress(e.target.value)}
                         required
                       />
                       <button 
-                        onClick={handleTopup}
-                        className="action-button topup-button app-button"
-                        disabled={isTopupPending || isTopupConfirming}
+                        type="submit"
+                        className="drip-button primary-action-button app-button"
+                        disabled={isDripPending || isDripConfirming || !recipientAddress}
                       >
-                        {isTopupPending || isTopupConfirming ? 
+                        {isDripPending || isDripConfirming ? 
                           <span className="loading-spinner">🌀</span> : 
-                          'Top-up'
+                          <><span className="drip-icon">💧</span> Drip</>
                         }
                       </button>
                     </div>
-                  ) : (
-                    <div className="action-panel wallet-connect-prompt">
-                      <div className="connect-wallet-message">
-                        Connect wallet to top-up this faucet
-                      </div>
+                    <div className="drip-info">
+                      {faucetDetails.dripAmount} ETH will be sent to your address on the {SUPPORTED_NETWORKS[selectedNetwork]?.name || selectedNetwork} network
                     </div>
-                  )}
+                  </form>
                 </div>
+                
+                {address && (
+                  <div className="secondary-actions">
+                    <button 
+                      onClick={() => setShowTopup(!showTopup)} 
+                      className="toggle-topup-button app-button secondary-button"
+                    >
+                      {showTopup ? 'Hide Top-up' : 'Funds running low?'}
+                    </button>
+                    
+                    {showTopup && (
+                      <div className="topup-panel">
+                        <div className="topup-header">
+                          <h5 className="topup-title">Top-up Faucet</h5>
+                          <p className="topup-description">Add funds to keep this faucet running</p>
+                        </div>
+                        <div className="topup-input-container">
+                          <input
+                            type="text"
+                            className="action-input"
+                            placeholder="Amount in ETH"
+                            value={topupAmount}
+                            onChange={(e) => setTopupAmount(e.target.value)}
+                          />
+                          <button 
+                            onClick={handleTopup}
+                            className="topup-button secondary-action-button app-button"
+                            disabled={isTopupPending || isTopupConfirming || !topupAmount}
+                          >
+                            {isTopupPending || isTopupConfirming ? 
+                              <span className="loading-spinner">🌀</span> : 
+                              'Top-up'
+                            }
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             

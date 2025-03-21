@@ -494,7 +494,6 @@ footer {
 
 /* Make search form take minimal space when empty */
 .search-form {
-  margin-bottom: var(--space-xl);
   width: 100%;
   flex-shrink: 0;
 }
