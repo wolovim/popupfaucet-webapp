@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
 import { parseEther } from 'viem';
-import { POPUP_FAUCET_ABI, OP_SEPOLIA_FAUCET_ADDRESS } from '../constants/contracts';
+import { POPUP_FAUCET_ABI } from '../constants/contracts';
+import { useNetworkContext } from '../context/NetworkContext';
+import { getContractAddress, SUPPORTED_NETWORKS } from '../constants/networks';
 import '../styles/CreateFaucet.css';
+import NetworkTypeahead from './NetworkTypeahead';
+
+console.log('Current ABI:', POPUP_FAUCET_ABI);
 
 export default function CreateFaucet() {
   const { isConnected } = useAccount();
+  const { selectedNetwork, changeNetwork } = useNetworkContext();
+  const contractAddress = getContractAddress(selectedNetwork);
+  
   const [name, setName] = useState('');
   const [dripAmount, setDripAmount] = useState('');
-  const [dripInterval, setDripInterval] = useState('');
   const [initialBalance, setInitialBalance] = useState('');
   const [nameToCheck, setNameToCheck] = useState('');
   const [nameAvailable, setNameAvailable] = useState(null);
@@ -16,7 +23,7 @@ export default function CreateFaucet() {
   const { data: hash, isPending, error, writeContract } = useWriteContract();
   
   const { data: faucetData, isLoading: isCheckingName, isError: nameCheckFailed } = useReadContract({
-    address: OP_SEPOLIA_FAUCET_ADDRESS,
+    address: contractAddress,
     abi: POPUP_FAUCET_ABI,
     functionName: 'get_faucet',
     args: nameToCheck ? [nameToCheck] : undefined,
@@ -28,6 +35,15 @@ export default function CreateFaucet() {
       hash,
     });
 
+  // Reset form when network changes
+  useEffect(() => {
+    setName('');
+    setDripAmount('');
+    setInitialBalance('');
+    setNameAvailable(null);
+  }, [selectedNetwork]);
+
+  // Name checking logic
   useEffect(() => {
     if (!name.trim()) {
       setNameAvailable(null);
@@ -45,10 +61,11 @@ export default function CreateFaucet() {
     if (!nameToCheck) return;
     
     if (!isCheckingName) {
-      if (faucetData) {
-        setNameAvailable(false);
-      } else if (nameCheckFailed) {
-        setNameAvailable(true);
+      // Check if the creator address is empty (0x0000...0000)
+      if (faucetData && faucetData.creator !== '0x0000000000000000000000000000000000000000') {
+        setNameAvailable(false); // Faucet exists
+      } else {
+        setNameAvailable(true); // Faucet doesn't exist or has empty creator
       }
       
       setNameToCheck('');
@@ -58,7 +75,7 @@ export default function CreateFaucet() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!name || !dripAmount || !dripInterval || !initialBalance) {
+    if (!name || !dripAmount || !initialBalance) {
       alert('Please fill in all fields');
       return;
     }
@@ -70,10 +87,10 @@ export default function CreateFaucet() {
     
     try {
       await writeContract({
-        address: OP_SEPOLIA_FAUCET_ADDRESS,
+        address: contractAddress,
         abi: POPUP_FAUCET_ABI,
         functionName: 'create',
-        args: [name, parseEther(dripAmount), dripInterval],
+        args: [name, parseEther(dripAmount)],
         value: parseEther(initialBalance),
       });
     } catch (err) {
@@ -97,6 +114,15 @@ export default function CreateFaucet() {
       <h2>Create New Faucet</h2>
       
       <form onSubmit={handleSubmit} className="create-form">
+        <div className="form-group network-select-group">
+          <label htmlFor="create-network-select">Select Network</label>
+          <NetworkTypeahead 
+            selectedNetwork={selectedNetwork}
+            onChange={changeNetwork}
+            id="create-network-select"
+          />
+        </div>
+        
         <div className="form-group">
           <label htmlFor="name">Faucet Name</label>
           <input
@@ -144,19 +170,6 @@ export default function CreateFaucet() {
         </div>
         
         <div className="form-group">
-          <label htmlFor="dripInterval">Drip Interval (seconds)</label>
-          <input
-            id="dripInterval"
-            type="number"
-            value={dripInterval}
-            onChange={(e) => setDripInterval(e.target.value)}
-            placeholder="86400"
-            required
-          />
-          <span className="form-info">Time between allowed drips (86400 = 1 day)</span>
-        </div>
-        
-        <div className="form-group">
           <label htmlFor="initialBalance">Initial Balance (ETH)</label>
           <input
             id="initialBalance"
@@ -166,24 +179,37 @@ export default function CreateFaucet() {
             placeholder="0.1"
             required
           />
-          <span className="form-info">Starting balance for your faucet</span>
+          <span className="form-info">Initial amount to fund the faucet with</span>
         </div>
         
         <button 
           type="submit" 
-          disabled={isPending || isConfirming || nameAvailable === false}
-          className="create-button"
+          className="create-button app-button"
+          disabled={isPending || isConfirming}
         >
-          {isPending ? 
-            <span className="loading-spinner">🌀 Confirming...</span> : 
-            isConfirming ? 
-            <span className="loading-spinner">🌀 Creating...</span> : 
-            <span>✨ Create Faucet</span>
-          }
+          {isPending || isConfirming ? (
+            <>
+              <span className="loading-spinner">🌀</span>
+              {isConfirming ? 'Confirming...' : 'Creating...'}
+            </>
+          ) : (
+            'Create Faucet'
+          )}
         </button>
         
-        {error && <div className="error">{error.message}</div>}
-        {isConfirmed && <div className="success">Faucet created successfully!</div>}
+        {isConfirmed && (
+          <div className="success-message">
+            <span className="success-icon">✓</span>
+            Faucet created successfully!
+          </div>
+        )}
+        
+        {error && (
+          <div className="error-message">
+            <span className="error-icon">✗</span>
+            Error: {error.message || 'Failed to create faucet'}
+          </div>
+        )}
       </form>
     </div>
   );

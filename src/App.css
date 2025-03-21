@@ -175,6 +175,12 @@ header {
 
 .title-container {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.header-info {
+  display: flex;
   align-items: center;
   gap: var(--space-md);
 }
@@ -257,7 +263,6 @@ button {
 
 button:hover:not(:disabled) {
   background-color: var(--primary-dark);
-  transform: translateY(-1px);
 }
 
 button:disabled {
@@ -378,7 +383,6 @@ input:focus, textarea:focus, select:focus {
 
 .connect-button:hover {
   background-color: var(--primary-dark);
-  transform: translateY(-1px);
 }
 
 /* Status messages */
@@ -471,19 +475,6 @@ footer {
   }
 }
 
-.faucet-count {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  background-color: var(--bg-accent);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  height: 28px;
-  transform: translateY(1px);
-}
-
 .loading-spinner {
   animation: spin 1s linear infinite;
   display: inline-block;
@@ -524,6 +515,10 @@ footer {
   border-radius: var(--radius-lg);
   padding: var(--space-sm);
   box-shadow: var(--shadow-sm);
+  max-width: 800px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .tab-button {
@@ -538,14 +533,12 @@ footer {
   text-align: center;
 }
 
-/* Improve tab button hover contrast in dark mode */
 .tab-button:hover:not(.active) {
   color: var(--primary-light);
   background-color: rgba(255, 255, 255, 0.1);
   transform: none;
 }
 
-/* Ensure active tab has good contrast */
 .tab-button.active {
   color: var(--text-light);
   background-color: var(--primary);
@@ -594,4 +587,41 @@ footer {
   cursor: not-allowed;
   border-color: var(--neutral-light);
   color: var(--text-muted);
+}
+
+/* Update NetworkSelector.css */
+.network-selector {
+  position: relative;
+  display: inline-block;
+  z-index: 10;
+}
+
+.network-dropdown-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--bg-accent);
+  border: 1px solid var(--neutral-light);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  height: 28px;
+}
+
+.network-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 200px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--neutral-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 20;
 } 

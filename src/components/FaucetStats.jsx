@@ -41,7 +41,7 @@ export default function FaucetStats() {
         )}
       </h2>
       <p className="stats-description">
-        Create and manage Ethereum faucets with customizable drip amounts and intervals.
+        Create and manage Ethereum faucets with customizable drip amounts.
       </p>
     </div>
   );

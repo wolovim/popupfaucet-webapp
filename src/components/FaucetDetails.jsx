@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, formatEther, formatUnits } from 'viem';
-import { OP_SEPOLIA_FAUCET_ADDRESS, POPUP_FAUCET_ABI } from '../constants/contracts';
+import { parseEther, formatEther } from 'viem';
+import { POPUP_FAUCET_ABI } from '../constants/contracts';
+import { useNetworkContext } from '../context/NetworkContext';
+import { getContractAddress, SUPPORTED_NETWORKS } from '../constants/networks';
 import '../styles/FaucetDetails.css';
+import NetworkTypeahead from './NetworkTypeahead';
 
 export default function FaucetDetails() {
   const { address } = useAccount();
+  const { selectedNetwork, changeNetwork } = useNetworkContext();
+  const contractAddress = getContractAddress(selectedNetwork);
+  
   const [faucetName, setFaucetName] = useState('');
   const [currentFaucetName, setCurrentFaucetName] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
@@ -18,7 +24,7 @@ export default function FaucetDetails() {
 
   // Read contract data - only enabled when we have a currentFaucetName (after button click)
   const { data: faucetData, refetch, isError, error: readError, isLoading: isReadLoading } = useReadContract({
-    address: OP_SEPOLIA_FAUCET_ADDRESS,
+    address: contractAddress,
     abi: POPUP_FAUCET_ABI,
     functionName: 'get_faucet',
     args: currentFaucetName ? [currentFaucetName] : undefined,
@@ -39,6 +45,16 @@ export default function FaucetDetails() {
   const { isLoading: isUnpauseConfirming, isSuccess: isUnpauseConfirmed } = useWaitForTransactionReceipt({ hash: unpauseHash });
   const { isLoading: isWithdrawConfirming, isSuccess: isWithdrawConfirmed } = useWaitForTransactionReceipt({ hash: withdrawHash });
 
+  // Reset state when network changes
+  useEffect(() => {
+    setFaucetName('');
+    setCurrentFaucetName('');
+    setFaucetDetails(null);
+    setError(null);
+    setFetchAttempted(false);
+    setCompactSearch(false);
+  }, [selectedNetwork]);
+
   // Update faucet details when data changes
   useEffect(() => {
     if (faucetData) {
@@ -55,17 +71,18 @@ export default function FaucetDetails() {
           
           setFaucetDetails({
             dripAmount: dripAmountFormatted,
-            dripInterval: Number(faucetData.drip_interval || 0n),
             balance: balanceFormatted,
             paused: Boolean(faucetData.paused),
             creator: faucetData.creator || '0x0000000000000000000000000000000000000000',
           });
           setError(null);
         }
+        setLoading(false); // Reset loading state when we get data
       } catch (err) {
         console.error("Error formatting faucet data:", err);
         setError(`Error processing faucet data: ${err.message}`);
         setFaucetDetails(null);
+        setLoading(false); // Reset loading state on error
       }
     } else if (isError && fetchAttempted) {
       // Check for specific error messages
@@ -81,8 +98,9 @@ export default function FaucetDetails() {
       
       console.error("Original error:", readError);
       setFaucetDetails(null);
+      setLoading(false); // Reset loading state on error
     }
-  }, [faucetData, isError, readError, fetchAttempted, currentFaucetName, isReadLoading, loading]);
+  }, [faucetData, isError, readError, fetchAttempted, currentFaucetName]);
 
   useEffect(() => {
     if (faucetDetails) {
@@ -97,19 +115,33 @@ export default function FaucetDetails() {
     }
   }, [isDripConfirmed, isTopupConfirmed, isPauseConfirmed, isUnpauseConfirmed, isWithdrawConfirmed, refetch]);
 
-  // Modify the button to add a timeout for isReadLoading
+  // Modify the timeout effect
   useEffect(() => {
     let timeoutId;
     if (isReadLoading) {
       timeoutId = setTimeout(() => {
         console.log("Read operation taking too long, forcing reset");
         setLoading(false);
-      }, 10000); // 10 second timeout
+        // Also reset the read loading state indirectly by clearing currentFaucetName
+        if (currentFaucetName) {
+          setCurrentFaucetName('');
+          setTimeout(() => setCurrentFaucetName(faucetName.trim()), 100);
+        }
+      }, 5000); // Reduced to 5 seconds for better UX
     }
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isReadLoading]);
+  }, [isReadLoading, currentFaucetName, faucetName]);
+
+  const handleNetworkChange = (e) => {
+    changeNetwork(e.target.value);
+    setFaucetName('');
+    setCurrentFaucetName('');
+    setFaucetDetails(null);
+    setError(null);
+    setFetchAttempted(false);
+  };
 
   const handleFetchFaucet = async (e) => {
     e.preventDefault();
@@ -124,15 +156,6 @@ export default function FaucetDetails() {
     
     // Set the current faucet name to trigger the query
     setCurrentFaucetName(faucetName.trim());
-    
-    try {
-      await refetch();
-    } catch (err) {
-      setError(`Error fetching faucet: ${err.message}`);
-      console.error('Error fetching faucet:', err);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleDrip = async () => {
@@ -141,7 +164,7 @@ export default function FaucetDetails() {
     setError(null);
     try {
       await writeDrip({
-        address: OP_SEPOLIA_FAUCET_ADDRESS,
+        address: contractAddress,
         abi: POPUP_FAUCET_ABI,
         functionName: 'drip',
         args: [currentFaucetName, recipientAddress],
@@ -158,7 +181,7 @@ export default function FaucetDetails() {
     setError(null);
     try {
       await writeTopup({
-        address: OP_SEPOLIA_FAUCET_ADDRESS,
+        address: contractAddress,
         abi: POPUP_FAUCET_ABI,
         functionName: 'topup',
         args: [currentFaucetName],
@@ -176,7 +199,7 @@ export default function FaucetDetails() {
     setError(null);
     try {
       await writePause({
-        address: OP_SEPOLIA_FAUCET_ADDRESS,
+        address: contractAddress,
         abi: POPUP_FAUCET_ABI,
         functionName: 'pause',
         args: [currentFaucetName],
@@ -193,7 +216,7 @@ export default function FaucetDetails() {
     setError(null);
     try {
       await writeUnpause({
-        address: OP_SEPOLIA_FAUCET_ADDRESS,
+        address: contractAddress,
         abi: POPUP_FAUCET_ABI,
         functionName: 'unpause',
         args: [currentFaucetName],
@@ -210,7 +233,7 @@ export default function FaucetDetails() {
     setError(null);
     try {
       await writeWithdraw({
-        address: OP_SEPOLIA_FAUCET_ADDRESS,
+        address: contractAddress,
         abi: POPUP_FAUCET_ABI,
         functionName: 'withdraw_faucet',
         args: [currentFaucetName],
@@ -251,12 +274,9 @@ export default function FaucetDetails() {
   return (
     <div className="card faucet-details-card">
       <h2 className="card-title">Find a Faucet</h2>
-      <div className="card-description">
-        Search for a faucet by name, then provide an address to drip funds to.
-      </div>
       
-      {compactSearch ? (
-        <div className="compact-search">
+      {faucetDetails && (
+        <div className="search-controls">
           <button 
             onClick={handleNewSearch}
             className="new-search-button app-button secondary-button"
@@ -264,177 +284,206 @@ export default function FaucetDetails() {
             🔍 New Search
           </button>
         </div>
-      ) : (
-        <form onSubmit={handleFetchFaucet} className="search-form">
-          <div className="form-group search-group">
-            <input
-              id="faucetName"
-              type="text"
-              value={faucetName}
-              onChange={(e) => setFaucetName(e.target.value)}
-              placeholder="Enter faucet name"
-              className="search-input"
-              required
-            />
-            <button 
-              type="submit" 
-              disabled={loading || !faucetName || (fetchAttempted && isReadLoading)}
-              className="search-button app-button"
-            >
-              {(fetchAttempted && isReadLoading) || loading ? 
-                <span className="loading-spinner">🌀</span> : 
-                <span className="search-icon">🔍</span>
-              }
-            </button>
+      )}
+      
+      <div className="card-description">
+        Search for a faucet by name, then provide an address to drip funds to.
+      </div>
+      
+      <div className="search-form">
+        {!compactSearch && (
+          <>
+            <div className="form-group network-select-group">
+              <label htmlFor="network-select">Select Network</label>
+              <NetworkTypeahead 
+                selectedNetwork={selectedNetwork}
+                onChange={(networkKey) => {
+                  changeNetwork(networkKey);
+                  setFaucetName('');
+                  setCurrentFaucetName('');
+                  setFaucetDetails(null);
+                  setError(null);
+                  setFetchAttempted(false);
+                }}
+                id="network-select"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="faucet-name">Faucet Name</label>
+              <div className="search-input-container">
+                <input
+                  id="faucet-name"
+                  type="text"
+                  value={faucetName}
+                  onChange={(e) => setFaucetName(e.target.value)}
+                  placeholder="Enter faucet name"
+                  disabled={loading}
+                />
+                <button 
+                  onClick={handleFetchFaucet}
+                  disabled={!faucetName.trim() || loading}
+                  className="search-button app-button"
+                >
+                  {loading ? <span className="loading-spinner">🌀</span> : '🔍'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+        
+        {error && <div className="error-message">{error}</div>}
+        {statusMessage && (
+          <div className={`status-message ${statusMessage.includes("successful") ? "success-status" : "info-status"}`}>
+            {statusMessage.includes("Processing") && <span className="processing-icon">⟳</span>}
+            {statusMessage.includes("successful") && <span className="success-icon">✓</span>}
+            {statusMessage}
           </div>
-        </form>
-      )}
-      
-      {error && <div className="error-message">{error}</div>}
-      {statusMessage && (
-        <div className={`status-message ${statusMessage.includes("successful") ? "success-status" : "info-status"}`}>
-          {statusMessage.includes("Processing") && <span className="processing-icon">⟳</span>}
-          {statusMessage.includes("successful") && <span className="success-icon">✓</span>}
-          {statusMessage}
-        </div>
-      )}
-      
-      {fetchAttempted && !faucetDetails && !loading && !error && !isReadLoading && (
-        <div className="info-message">
-          <span className="info-icon">ℹ️</span> No faucet found with this name.
-        </div>
-      )}
-      
-      {faucetDetails && (
-        <div className="faucet-info-container">
-          <div className="faucet-header">
-            <h3 className="faucet-name">{currentFaucetName}</h3>
-            <span className={`faucet-status ${faucetDetails.paused ? 'status-paused' : 'status-active'}`}>
-              {faucetDetails.paused ? 'Paused' : 'Active'}
-            </span>
+        )}
+        
+        {fetchAttempted && !faucetDetails && !loading && !error && !isReadLoading && (
+          <div className="info-message">
+            <span className="info-icon">ℹ️</span> No faucet found with this name.
           </div>
-          
-          <div className="faucet-stats">
-            <div className="stat-item">
-              <span className="stat-icon">💧</span>
-              <div className="stat-details">
-                <span className="stat-value">{faucetDetails.dripAmount} ETH</span>
-                <span className="stat-label">Drip</span>
-              </div>
-            </div>
-            
-            <div className="stat-item">
-              <span className="stat-icon">⏱️</span>
-              <div className="stat-details">
-                <span className="stat-value">{faucetDetails.dripInterval} sec</span>
-                <span className="stat-label">Interval</span>
-              </div>
-            </div>
-            
-            <div className="stat-item">
-              <span className="stat-icon">💰</span>
-              <div className="stat-details">
-                <span className="stat-value">{faucetDetails.balance} ETH</span>
-                <span className="stat-label">Balance</span>
-              </div>
-            </div>
-            
-            <div className="stat-item">
-              <span className="stat-icon">👤</span>
-              <div className="stat-details">
-                <span className="stat-value address-value">
-                  {faucetDetails.creator.substring(0, 6)}...{faucetDetails.creator.substring(38)}
+        )}
+        
+        {faucetDetails && (
+          <div className="faucet-info-container">
+            <div className="faucet-header">
+              <h3 className="faucet-name">{currentFaucetName}</h3>
+              <div className="faucet-status-container">
+                <span className={`faucet-status ${faucetDetails.paused ? 'status-paused' : 'status-active'}`}>
+                  {faucetDetails.paused ? 'Paused' : 'Active'}
                 </span>
-                <span className="stat-label">Creator</span>
+                <span className="faucet-network">
+                  <span className="network-dot"></span>
+                  {SUPPORTED_NETWORKS[selectedNetwork]?.name || selectedNetwork}
+                </span>
               </div>
             </div>
-          </div>
-          
-          <div className="actions-container">
-            <div className="action-panels">
-              <div className="action-panel-row">
-                <div className="action-panel">
-                  <input
-                    type="text"
-                    className="action-input"
-                    placeholder="Enter recipient address"
-                    value={recipientAddress}
-                    onChange={(e) => setRecipientAddress(e.target.value)}
-                    required
-                  />
-                  <button 
-                    onClick={handleDrip}
-                    className="action-button drip-button app-button"
-                    disabled={isDripPending || isDripConfirming}
-                  >
-                    {isDripPending || isDripConfirming ? 
-                      <span className="loading-spinner">🌀</span> : 
-                      'Drip'
-                    }
-                  </button>
+            
+            <div className="faucet-stats">
+              <div className="stat-item">
+                <span className="stat-icon">💧</span>
+                <div className="stat-details">
+                  <span className="stat-value">{faucetDetails.dripAmount} ETH</span>
+                  <span className="stat-label">Drip</span>
                 </div>
-                
-                <div className="action-panel">
-                  <input
-                    type="text"
-                    className="action-input"
-                    placeholder="Amount in ETH"
-                    value={topupAmount}
-                    onChange={(e) => setTopupAmount(e.target.value)}
-                    required
-                  />
-                  <button 
-                    onClick={handleTopup}
-                    className="action-button topup-button app-button"
-                    disabled={isTopupPending || isTopupConfirming}
-                  >
-                    {isTopupPending || isTopupConfirming ? 
-                      <span className="loading-spinner">🌀</span> : 
-                      'Top-up'
-                    }
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {address === faucetDetails.creator && (
-            <div className="owner-section">
-              <div className="owner-section-header">
-                <h4 className="owner-section-title">Owner Controls</h4>
-                <p className="owner-section-description">
-                  As the creator of this faucet, you have access to additional controls.
-                </p>
               </div>
               
-              <div className="owner-actions">
-                <div className="owner-buttons-row">
-                  <button 
-                    onClick={faucetDetails.paused ? handleUnpause : handlePause}
-                    disabled={(faucetDetails.paused ? isUnpausePending || isUnpauseConfirming : isPausePending || isPauseConfirming)}
-                    className={`owner-button app-button ${faucetDetails.paused ? 'success-button unpause-button' : 'warning-button pause-button'}`}
-                  >
-                    {faucetDetails.paused 
-                      ? (isUnpausePending || isUnpauseConfirming ? <span className="loading-spinner">🌀</span> : <span>Unpause Faucet</span>) 
-                      : (isPausePending || isPauseConfirming ? <span className="loading-spinner">🌀</span> : <span>Pause Faucet</span>)}
-                  </button>
-                  
-                  <button 
-                    onClick={handleWithdraw}
-                    disabled={isWithdrawPending || isWithdrawConfirming}
-                    className="owner-button withdraw-button app-button danger-button"
-                  >
-                    {isWithdrawPending || isWithdrawConfirming ? 
-                      <span className="loading-spinner">🌀</span> : 
-                      <span>Withdraw All Funds</span>
-                    }
-                  </button>
+              <div className="stat-item">
+                <span className="stat-icon">💰</span>
+                <div className="stat-details">
+                  <span className="stat-value">{faucetDetails.balance} ETH</span>
+                  <span className="stat-label">Balance</span>
+                </div>
+              </div>
+              
+              <div className="stat-item">
+                <span className="stat-icon">👤</span>
+                <div className="stat-details">
+                  <span className="stat-value address-value">
+                    {faucetDetails.creator.substring(0, 6)}...{faucetDetails.creator.substring(38)}
+                  </span>
+                  <span className="stat-label">Creator</span>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+            
+            <div className="actions-container">
+              <div className="action-panels">
+                <div className="action-panel-row">
+                  <div className="action-panel">
+                    <input
+                      type="text"
+                      className="action-input"
+                      placeholder="Enter recipient address"
+                      value={recipientAddress}
+                      onChange={(e) => setRecipientAddress(e.target.value)}
+                      required
+                    />
+                    <button 
+                      onClick={handleDrip}
+                      className="action-button drip-button app-button"
+                      disabled={isDripPending || isDripConfirming}
+                    >
+                      {isDripPending || isDripConfirming ? 
+                        <span className="loading-spinner">🌀</span> : 
+                        'Drip'
+                      }
+                    </button>
+                  </div>
+                  
+                  {address ? (
+                    <div className="action-panel">
+                      <input
+                        type="text"
+                        className="action-input"
+                        placeholder="Amount in ETH"
+                        value={topupAmount}
+                        onChange={(e) => setTopupAmount(e.target.value)}
+                        required
+                      />
+                      <button 
+                        onClick={handleTopup}
+                        className="action-button topup-button app-button"
+                        disabled={isTopupPending || isTopupConfirming}
+                      >
+                        {isTopupPending || isTopupConfirming ? 
+                          <span className="loading-spinner">🌀</span> : 
+                          'Top-up'
+                        }
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="action-panel wallet-connect-prompt">
+                      <div className="connect-wallet-message">
+                        Connect wallet to top-up this faucet
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {address === faucetDetails.creator && (
+              <div className="owner-section">
+                <div className="owner-section-header">
+                  <h4 className="owner-section-title">Owner Controls</h4>
+                  <p className="owner-section-description">
+                    As the creator of this faucet, you have access to additional controls.
+                  </p>
+                </div>
+                
+                <div className="owner-actions">
+                  <div className="owner-buttons-row">
+                    <button 
+                      onClick={faucetDetails.paused ? handleUnpause : handlePause}
+                      disabled={(faucetDetails.paused ? isUnpausePending || isUnpauseConfirming : isPausePending || isPauseConfirming)}
+                      className={`owner-button app-button ${faucetDetails.paused ? 'success-button unpause-button' : 'warning-button pause-button'}`}
+                    >
+                      {faucetDetails.paused 
+                        ? (isUnpausePending || isUnpauseConfirming ? <span className="loading-spinner">🌀</span> : <span>Unpause Faucet</span>) 
+                        : (isPausePending || isPauseConfirming ? <span className="loading-spinner">🌀</span> : <span>Pause Faucet</span>)}
+                    </button>
+                    
+                    <button 
+                      onClick={handleWithdraw}
+                      disabled={isWithdrawPending || isWithdrawConfirming}
+                      className="owner-button withdraw-button app-button danger-button"
+                    >
+                      {isWithdrawPending || isWithdrawConfirming ? 
+                        <span className="loading-spinner">🌀</span> : 
+                        <span>Withdraw All Funds</span>
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
-} 
+}
