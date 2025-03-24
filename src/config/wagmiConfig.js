@@ -3,7 +3,6 @@ import { optimismSepolia, baseSepolia, sepolia } from 'wagmi/chains';
 import { injected } from 'wagmi/connectors';
 import { SUPPORTED_NETWORKS } from '../constants/networks';
 
-// Convert our supported chains to wagmi format
 const chains = [optimismSepolia, baseSepolia, sepolia];
 
 export const config = createConfig({

@@ -1,3 +1,5 @@
+import { OP_SEPOLIA_FAUCET_ADDRESS, BASE_SEPOLIA_FAUCET_ADDRESS, ETH_SEPOLIA_FAUCET_ADDRESS } from './contracts';
+
 export const SUPPORTED_NETWORKS = {
   "optimism-sepolia": {
     id: 11155420,
@@ -22,7 +24,7 @@ export const SUPPORTED_NETWORKS = {
         url: "https://sepolia-optimism.etherscan.io",
       },
     },
-    contractAddress: import.meta.env.VITE_OP_SEPOLIA_FAUCET_ADDRESS,
+    contractAddress: OP_SEPOLIA_FAUCET_ADDRESS,
   },
   "base-sepolia": {
     id: 84532,
@@ -47,7 +49,7 @@ export const SUPPORTED_NETWORKS = {
         url: "https://sepolia.basescan.org",
       },
     },
-    contractAddress: import.meta.env.VITE_BASE_SEPOLIA_FAUCET_ADDRESS,
+    contractAddress: BASE_SEPOLIA_FAUCET_ADDRESS,
   },
   "sepolia": {
     id: 11155111,
@@ -60,7 +62,7 @@ export const SUPPORTED_NETWORKS = {
     },
     rpcUrls: {
       default: {
-        http: [import.meta.env.VITE_SEPOLIA_URL],
+        http: [import.meta.env.VITE_ETH_SEPOLIA_URL],
       },
       public: {
         http: ["https://rpc.sepolia.org"],
@@ -72,15 +74,20 @@ export const SUPPORTED_NETWORKS = {
         url: "https://sepolia.etherscan.io",
       },
     },
-    contractAddress: import.meta.env.VITE_SEPOLIA_FAUCET_ADDRESS,
+    contractAddress: ETH_SEPOLIA_FAUCET_ADDRESS,
   },
 };
 
 export function getNetworkConfig(networkKey) {
-  return SUPPORTED_NETWORKS[networkKey] || SUPPORTED_NETWORKS["optimism-sepolia"];
-}
+  return SUPPORTED_NETWORKS[networkKey];
+};
 
 export function getContractAddress(networkKey) {
   const network = getNetworkConfig(networkKey);
   return network.contractAddress;
-} 
+};
+
+export function getNetworkName(networkKey) {
+  const network = getNetworkConfig(networkKey);
+  return network.name;
+};

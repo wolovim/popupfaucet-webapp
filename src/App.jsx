@@ -6,16 +6,13 @@ import ConnectWallet from './components/ConnectWallet';
 import CreateFaucet from './components/CreateFaucet';
 import FaucetDetails from './components/FaucetDetails';
 import { NetworkProvider, useNetworkContext } from './context/NetworkContext';
-import { getContractAddress } from './constants/networks';
+import { getContractAddress, getNetworkName } from './constants/networks';
 import ThemeToggle from './components/ThemeToggle';
 import './App.css';
 
-// Create a client
 const queryClient = new QueryClient();
 
 function AppHeader() {
-  const { selectedNetwork } = useNetworkContext();
-  
   return (
     <header>
       <div className="title-container">
@@ -33,6 +30,9 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('lookup'); // 'lookup' or 'create'
   const { selectedNetwork } = useNetworkContext();
   
+  const contractAddress = getContractAddress(selectedNetwork) || "Not available";
+  const networkName = getNetworkName(selectedNetwork) || "Not available";
+
   return (
     <>
       <div className="tab-navigation">
@@ -59,7 +59,7 @@ function AppContent() {
       </main>
       
       <footer>
-        <p>PopupFaucet Contract: {getContractAddress(selectedNetwork)} ({selectedNetwork})</p>
+        <p>PopupFaucet Contract: {contractAddress} ({networkName})</p>
       </footer>
     </>
   );

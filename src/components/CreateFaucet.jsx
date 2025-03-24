@@ -7,8 +7,6 @@ import { getContractAddress, SUPPORTED_NETWORKS } from '../constants/networks';
 import '../styles/CreateFaucet.css';
 import NetworkTypeahead from './NetworkTypeahead';
 
-console.log('Current ABI:', POPUP_FAUCET_ABI);
-
 export default function CreateFaucet() {
   const { isConnected } = useAccount();
   const { selectedNetwork, changeNetwork } = useNetworkContext();
@@ -61,11 +59,10 @@ export default function CreateFaucet() {
     if (!nameToCheck) return;
     
     if (!isCheckingName) {
-      // Check if the creator address is empty (0x0000...0000)
       if (faucetData && faucetData.creator !== '0x0000000000000000000000000000000000000000') {
-        setNameAvailable(false); // Faucet exists
+        setNameAvailable(false);
       } else {
-        setNameAvailable(true); // Faucet doesn't exist or has empty creator
+        setNameAvailable(true);
       }
       
       setNameToCheck('');

@@ -57,11 +57,9 @@ export default function FaucetDetails() {
     setShowTopup(false);
   }, [selectedNetwork]);
 
-  // Update faucet details when data changes
   useEffect(() => {
     if (faucetData) {
       try {
-        // Check if the faucet exists (creator address is not zero)
         if (faucetData.creator === '0x0000000000000000000000000000000000000000') {
           setError(`Faucet "${currentFaucetName}" does not exist`);
           setFaucetDetails(null);
@@ -79,15 +77,14 @@ export default function FaucetDetails() {
           });
           setError(null);
         }
-        setLoading(false); // Reset loading state when we get data
+        setLoading(false);
       } catch (err) {
         console.error("Error formatting faucet data:", err);
         setError(`Error processing faucet data: ${err.message}`);
         setFaucetDetails(null);
-        setLoading(false); // Reset loading state on error
+        setLoading(false);
       }
     } else if (isError && fetchAttempted) {
-      // Check for specific error messages
       const errorMessage = readError?.message || '';
       
       if (errorMessage.includes('Faucet not found')) {
@@ -100,7 +97,7 @@ export default function FaucetDetails() {
       
       console.error("Original error:", readError);
       setFaucetDetails(null);
-      setLoading(false); // Reset loading state on error
+      setLoading(false);
     }
   }, [faucetData, isError, readError, fetchAttempted, currentFaucetName]);
 
