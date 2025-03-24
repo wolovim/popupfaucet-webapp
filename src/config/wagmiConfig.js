@@ -1,7 +1,6 @@
 import { createConfig, http } from 'wagmi';
 import { optimismSepolia, baseSepolia, sepolia } from 'wagmi/chains';
 import { injected } from 'wagmi/connectors';
-import { SUPPORTED_NETWORKS } from '../constants/networks';
 
 const chains = [optimismSepolia, baseSepolia, sepolia];
 
@@ -11,8 +10,8 @@ export const config = createConfig({
     injected(),
   ],
   transports: {
-    [optimismSepolia.id]: http(SUPPORTED_NETWORKS['optimism-sepolia'].rpcUrls.default.http[0]),
-    [baseSepolia.id]: http(SUPPORTED_NETWORKS['base-sepolia'].rpcUrls.default.http[0]),
-    [sepolia.id]: http(SUPPORTED_NETWORKS['sepolia'].rpcUrls.default.http[0]),
+    [optimismSepolia.id]: http(),
+    [baseSepolia.id]: http(),
+    [sepolia.id]: http(),
   },
 }); 

@@ -22,6 +22,16 @@ export default function FaucetDetails() {
   const [fetchAttempted, setFetchAttempted] = useState(false);
   const [compactSearch, setCompactSearch] = useState(false);
   const [showTopup, setShowTopup] = useState(false);
+  
+  // New states for server drip functionality
+  const [serverDripLoading, setServerDripLoading] = useState(false);
+  const [serverDripSuccess, setServerDripSuccess] = useState(false);
+  const [serverDripError, setServerDripError] = useState(null);
+  const [serverDripTxHash, setServerDripTxHash] = useState(null);
+
+  // New states for cooldown timer
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
   // Read contract data - only enabled when we have a currentFaucetName (after button click)
   const { data: faucetData, refetch, isError, error: readError, isLoading: isReadLoading } = useReadContract({
@@ -133,6 +143,23 @@ export default function FaucetDetails() {
     };
   }, [isReadLoading, currentFaucetName, faucetName]);
 
+  // Add useEffect for cooldown timer
+  useEffect(() => {
+    let intervalId;
+    
+    if (cooldownActive && cooldownSeconds > 0) {
+      intervalId = setInterval(() => {
+        setCooldownSeconds(prevSeconds => prevSeconds - 1);
+      }, 1000);
+    } else if (cooldownSeconds === 0 && cooldownActive) {
+      setCooldownActive(false);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [cooldownActive, cooldownSeconds]);
+
   const handleNetworkChange = (e) => {
     changeNetwork(e.target.value);
     setFaucetName('');
@@ -157,20 +184,71 @@ export default function FaucetDetails() {
     setCurrentFaucetName(faucetName.trim());
   };
 
-  const handleDrip = async () => {
+  const handleServerDrip = async () => {
     if (!currentFaucetName || !recipientAddress) return;
     
-    setError(null);
+    setServerDripLoading(true);
+    setServerDripSuccess(false);
+    setServerDripError(null);
+    setServerDripTxHash(null);
+    
     try {
-      await writeDrip({
-        address: contractAddress,
-        abi: POPUP_FAUCET_ABI,
-        functionName: 'drip',
-        args: [currentFaucetName, recipientAddress],
+      const serverUrl = import.meta.env.VITE_SERVER_URL;
+      if (!serverUrl) {
+        throw new Error('Server URL is not configured. Please check your environment variables.');
+      }
+      
+      const response = await fetch(`${serverUrl}/drip`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          name: currentFaucetName,
+          network: selectedNetwork,
+          address: recipientAddress,
+        }),
       });
+      
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Server returned non-JSON response: ${text}`);
+      }
+      
+      if (!response.ok) {
+        throw new Error(data.error || `Server error: ${response.status}`);
+      }
+      
+      setServerDripSuccess(true);
+      setServerDripTxHash(data.tx_hash);
+      
+      // Start cooldown timer
+      setCooldownSeconds(30);
+      setCooldownActive(true);
+      
+      // Refetch faucet details after successful drip
+      setTimeout(() => {
+        refetch();
+      }, 2000);
     } catch (err) {
-      setError(`Error dripping: ${err.message}`);
-      console.error('Error dripping:', err);
+      console.error('Server drip error:', err);
+      
+      // Provide more helpful error messages for common issues
+      if (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
+        setServerDripError('Network error: Unable to connect to the server. Please check your connection or the server might be down.');
+      } else if (err.message.includes('CORS')) {
+        setServerDripError('CORS error: The server is not configured to accept requests from this domain.');
+      } else {
+        setServerDripError(err.message || 'Failed to process drip request');
+      }
+    } finally {
+      setServerDripLoading(false);
     }
   };
 
@@ -250,10 +328,20 @@ export default function FaucetDetails() {
     setCurrentFaucetName('');
     setFaucetDetails(null);
     setFetchAttempted(false);
+    
+    // Clear server drip states
+    setServerDripSuccess(false);
+    setServerDripError(null);
+    setServerDripTxHash(null);
+    setCooldownActive(false);
+    setCooldownSeconds(0);
   };
 
-  // Status messages for transaction states
   const getStatusMessage = () => {
+    if (serverDripSuccess) return "Drip successful!";
+    if (serverDripLoading) return "Processing drip request via server...";
+    if (serverDripError) return `Drip error: ${serverDripError}`;
+    
     if (isDripPending || isDripConfirming) return "Processing drip transaction...";
     if (isTopupPending || isTopupConfirming) return "Processing top-up transaction...";
     if (isPausePending || isPauseConfirming) return "Processing pause transaction...";
@@ -399,7 +487,10 @@ export default function FaucetDetails() {
                 <div className="drip-panel">
                   <form onSubmit={(e) => {
                     e.preventDefault();
-                    if (recipientAddress) handleDrip();
+                    if (recipientAddress && !cooldownActive) {
+                      // Use server drip by default, fall back to on-chain if user is connected
+                      handleServerDrip();
+                    }
                   }}>
                     <div className="drip-input-container">
                       <input
@@ -409,21 +500,39 @@ export default function FaucetDetails() {
                         value={recipientAddress}
                         onChange={(e) => setRecipientAddress(e.target.value)}
                         required
+                        disabled={serverDripLoading || cooldownActive}
                       />
                       <button 
                         type="submit"
                         className="drip-button primary-action-button app-button"
-                        disabled={isDripPending || isDripConfirming || !recipientAddress}
+                        disabled={serverDripLoading || !recipientAddress || cooldownActive}
                       >
-                        {isDripPending || isDripConfirming ? 
-                          <span className="loading-spinner">🌀</span> : 
+                        {serverDripLoading ? (
+                          <span className="loading-spinner">🌀</span>
+                        ) : cooldownActive ? (
+                          <span className="cooldown-text">{cooldownSeconds}s</span>
+                        ) : (
                           <><span className="drip-icon">💧</span> Drip</>
-                        }
+                        )}
                       </button>
                     </div>
                     <div className="drip-info">
-                      {faucetDetails.dripAmount} ETH will be sent to your address on the {SUPPORTED_NETWORKS[selectedNetwork]?.name || selectedNetwork} network
+                      {cooldownActive 
+                        ? `Cooldown active: Please wait ${cooldownSeconds} seconds before requesting again` 
+                        : `${faucetDetails.dripAmount} ETH will be sent to your address on the ${SUPPORTED_NETWORKS[selectedNetwork]?.name || selectedNetwork} network`}
                     </div>
+                    {serverDripSuccess && (
+                      <div className="server-drip-success">
+                        <a 
+                          href={`${SUPPORTED_NETWORKS[selectedNetwork]?.blockExplorers?.default?.url}/tx/${serverDripTxHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="tx-link"
+                        >
+                          View transaction
+                        </a>
+                      </div>
+                    )}
                   </form>
                 </div>
                 
