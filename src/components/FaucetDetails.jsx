@@ -33,6 +33,12 @@ export default function FaucetDetails() {
   const [cooldownActive, setCooldownActive] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
+  // New state for updating drip amount
+  const [newDripAmount, setNewDripAmount] = useState('');
+
+  // Add a new state to track the last successful update
+  const [lastSuccessfulUpdate, setLastSuccessfulUpdate] = useState(null);
+
   // Read contract data - only enabled when we have a currentFaucetName (after button click)
   const { data: faucetData, refetch, isError, error: readError, isLoading: isReadLoading } = useReadContract({
     address: contractAddress,
@@ -48,6 +54,7 @@ export default function FaucetDetails() {
   const { data: pauseHash, writeContract: writePause, isPending: isPausePending } = useWriteContract();
   const { data: unpauseHash, writeContract: writeUnpause, isPending: isUnpausePending } = useWriteContract();
   const { data: withdrawHash, writeContract: writeWithdraw, isPending: isWithdrawPending } = useWriteContract();
+  const { data: updateDripHash, writeContract: writeUpdateDrip, isPending: isUpdateDripPending } = useWriteContract();
 
   // Transaction receipts
   const { isLoading: isDripConfirming, isSuccess: isDripConfirmed } = useWaitForTransactionReceipt({ hash: dripHash });
@@ -55,6 +62,7 @@ export default function FaucetDetails() {
   const { isLoading: isPauseConfirming, isSuccess: isPauseConfirmed } = useWaitForTransactionReceipt({ hash: pauseHash });
   const { isLoading: isUnpauseConfirming, isSuccess: isUnpauseConfirmed } = useWaitForTransactionReceipt({ hash: unpauseHash });
   const { isLoading: isWithdrawConfirming, isSuccess: isWithdrawConfirmed } = useWaitForTransactionReceipt({ hash: withdrawHash });
+  const { isLoading: isUpdateDripConfirming, isSuccess: isUpdateDripConfirmed } = useWaitForTransactionReceipt({ hash: updateDripHash });
 
   // Reset state when network changes
   useEffect(() => {
@@ -65,6 +73,7 @@ export default function FaucetDetails() {
     setFetchAttempted(false);
     setCompactSearch(false);
     setShowTopup(false);
+    setNewDripAmount('');
   }, [selectedNetwork]);
 
   useEffect(() => {
@@ -119,10 +128,10 @@ export default function FaucetDetails() {
 
   // Refetch data after confirmed transactions
   useEffect(() => {
-    if (isDripConfirmed || isTopupConfirmed || isPauseConfirmed || isUnpauseConfirmed || isWithdrawConfirmed) {
+    if (isDripConfirmed || isTopupConfirmed || isPauseConfirmed || isUnpauseConfirmed || isWithdrawConfirmed || isUpdateDripConfirmed) {
       refetch();
     }
-  }, [isDripConfirmed, isTopupConfirmed, isPauseConfirmed, isUnpauseConfirmed, isWithdrawConfirmed, refetch]);
+  }, [isDripConfirmed, isTopupConfirmed, isPauseConfirmed, isUnpauseConfirmed, isWithdrawConfirmed, isUpdateDripConfirmed, refetch]);
 
   // Modify the timeout effect
   useEffect(() => {
@@ -321,6 +330,25 @@ export default function FaucetDetails() {
     }
   };
 
+  const handleUpdateDripAmount = async () => {
+    if (!currentFaucetName || !newDripAmount) return;
+    
+    setError(null);
+    setLastSuccessfulUpdate(null);
+    
+    try {
+      await writeUpdateDrip({
+        address: contractAddress,
+        abi: POPUP_FAUCET_ABI,
+        functionName: 'set_drip_amount',
+        args: [currentFaucetName, parseEther(newDripAmount)],
+      });
+    } catch (err) {
+      setError(`Error updating drip amount: ${err.message}`);
+      console.error('Error updating drip amount:', err);
+    }
+  };
+
   const handleNewSearch = () => {
     setShowTopup(false);
     setCompactSearch(false);
@@ -347,17 +375,34 @@ export default function FaucetDetails() {
     if (isPausePending || isPauseConfirming) return "Processing pause transaction...";
     if (isUnpausePending || isUnpauseConfirming) return "Processing unpause transaction...";
     if (isWithdrawPending || isWithdrawConfirming) return "Processing withdrawal transaction...";
+    if (isUpdateDripPending || isUpdateDripConfirming) return "Processing drip amount update...";
     
     if (isDripConfirmed) return "Drip successful!";
     if (isTopupConfirmed) return "Top-up successful!";
     if (isPauseConfirmed) return "Faucet paused successfully!";
     if (isUnpauseConfirmed) return "Faucet unpaused successfully!";
     if (isWithdrawConfirmed) return "Withdrawal successful!";
+    if (isUpdateDripConfirmed) return "Drip amount updated successfully!";
     
     return null;
   };
 
   const statusMessage = getStatusMessage();
+
+  // Update the effect to track successful updates
+  useEffect(() => {
+    if (isUpdateDripConfirmed && !lastSuccessfulUpdate) {
+      // Set the last successful update to the current timestamp
+      setLastSuccessfulUpdate(Date.now());
+      
+      // Set a timeout to clear the success state after 3 seconds
+      const timer = setTimeout(() => {
+        setNewDripAmount('');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isUpdateDripConfirmed, lastSuccessfulUpdate]);
 
   return (
     <div className="card faucet-details-card">
@@ -428,7 +473,7 @@ export default function FaucetDetails() {
         {error && <div className="error-message">{error}</div>}
         {statusMessage && (
           <div className={`status-message ${statusMessage.includes("successful") ? "success-status" : "info-status"}`}>
-            {statusMessage.includes("Processing") && <span className="processing-icon">⟳</span>}
+            {statusMessage.includes("Processing") && <span className="processing-icon">🌀</span>}
             {statusMessage.includes("successful") && <span className="success-icon">✓</span>}
             {statusMessage}
           </div>
@@ -608,6 +653,35 @@ export default function FaucetDetails() {
                         <span>Withdraw All Funds</span>
                       }
                     </button>
+                  </div>
+                  
+                  <div className="update-drip-container">
+                    <div className="update-drip-header">
+                      <h5 className="update-drip-title">Update Drip Amount</h5>
+                      <p className="update-drip-description">Change how much ETH users receive per drip</p>
+                    </div>
+                    <div className="update-drip-input-container">
+                      <input
+                        type="text"
+                        className="action-input"
+                        placeholder="New amount in ETH"
+                        value={newDripAmount}
+                        onChange={(e) => setNewDripAmount(e.target.value)}
+                      />
+                      <button 
+                        onClick={handleUpdateDripAmount}
+                        className="update-drip-button secondary-action-button app-button"
+                        disabled={isUpdateDripPending || isUpdateDripConfirming || !newDripAmount}
+                      >
+                        {isUpdateDripPending || isUpdateDripConfirming ? (
+                          <span className="loading-spinner">🌀</span>
+                        ) : lastSuccessfulUpdate ? (
+                          <span className="success-icon">✓</span>
+                        ) : (
+                          'Update'
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

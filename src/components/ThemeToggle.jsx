@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import '../styles/ThemeToggle.css';
 
 export default function ThemeToggle() {
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
+  const [isDarkMode, setIsDarkMode] = useState(false); // Default to light mode
   
   useEffect(() => {
     // Check if user has a saved preference
@@ -10,6 +10,9 @@ export default function ThemeToggle() {
     if (savedTheme) {
       setIsDarkMode(savedTheme === 'dark');
       document.body.classList.toggle('light-mode', savedTheme === 'light');
+    } else {
+      // If no saved preference, default to light mode
+      document.body.classList.add('light-mode');
     }
   }, []);
   

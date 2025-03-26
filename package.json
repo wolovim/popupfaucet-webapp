@@ -2,6 +2,7 @@
   "name": "popupfaucet-webapp",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://popupfaucet.com",
   "type": "module",
   "scripts": {
     "dev": "vite",

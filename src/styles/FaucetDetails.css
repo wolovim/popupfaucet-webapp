@@ -63,12 +63,14 @@
 
 .search-input-container input {
   flex: 1;
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md);
   border: 1px solid var(--neutral-light);
   border-radius: var(--radius-md);
   font-size: 1rem;
   background-color: var(--bg-input);
   color: var(--text-primary);
+  height: 48px;
+  transition: all var(--transition-normal);
 }
 
 .search-input-container input:focus {
@@ -81,8 +83,8 @@
   background: var(--primary);
   border: none;
   color: white;
-  width: 40px;
-  height: 40px;
+  width: 48px !important;
+  height: 48px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -105,7 +107,7 @@
 
 .action-input {
   flex: 1;
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--space-md);
   padding-right: 50px;
   border: 2px solid var(--neutral-light);
   border-radius: var(--radius-md);
@@ -113,7 +115,7 @@
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-sm);
   color: var(--text-primary);
-  height: 42px;
+  height: 48px;
   background-color: var(--bg-input);
 }
 
@@ -360,14 +362,14 @@
 
 .action-input {
   flex: 1;
-  height: 38px;
+  height: 48px;
 }
 
 .drip-button, .topup-button {
   position: static;
   transform: none;
   min-width: 80px;
-  height: 38px;
+  height: 48px;
 }
 
 .owner-actions {
@@ -876,4 +878,119 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+/* Update Drip Amount Styling */
+.update-drip-container {
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background-color: var(--bg-accent);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--neutral-light);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.update-drip-header {
+  margin-bottom: var(--space-sm);
+}
+
+.update-drip-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.update-drip-description {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.update-drip-input-container {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.update-drip-button {
+  height: 48px;
+  min-width: 80px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.update-drip-button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.update-drip-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Standardize all inputs */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+.drip-input,
+.action-input,
+.search-input-container input {
+  padding: var(--space-md);
+  border: 1px solid var(--neutral-light);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  height: 48px;
+  transition: all var(--transition-normal);
+  width: 100%;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+.drip-input:focus,
+.action-input:focus,
+.search-input-container input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  outline: none;
+}
+
+/* Update specific input containers to match */
+.search-input-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.drip-input-container,
+.topup-input-container,
+.update-drip-input-container {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+/* Adjust button heights to match inputs */
+.search-button,
+.drip-button,
+.topup-button,
+.update-drip-button {
+  height: 48px;
+}
+
+/* Ensure action inputs have consistent styling */
+.action-input {
+  height: 48px;
+  padding: var(--space-md);
 }

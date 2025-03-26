@@ -37,7 +37,7 @@
   border: 1px solid var(--neutral-light);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
-  z-index: 10;
+  z-index: 100;
   overflow: hidden;
 }
 
@@ -89,4 +89,17 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* Make sure parent containers don't clip the dropdown */
+.faucet-details-card {
+  overflow: visible !important;
+}
+
+.card {
+  overflow: visible !important;
+}
+
+.tab-content {
+  overflow: visible !important;
 } 
