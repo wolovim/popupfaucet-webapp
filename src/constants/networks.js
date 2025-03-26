@@ -1,4 +1,4 @@
-import { OP_SEPOLIA_FAUCET_ADDRESS, BASE_SEPOLIA_FAUCET_ADDRESS, ETH_SEPOLIA_FAUCET_ADDRESS } from './contracts';
+import { OP_SEPOLIA_FAUCET_ADDRESS, BASE_SEPOLIA_FAUCET_ADDRESS, ETH_SEPOLIA_FAUCET_ADDRESS, ETH_HOODI_FAUCET_ADDRESS } from './contracts';
 
 export const SUPPORTED_NETWORKS = {
   "optimism-sepolia": {
@@ -76,6 +76,28 @@ export const SUPPORTED_NETWORKS = {
     },
     contractAddress: ETH_SEPOLIA_FAUCET_ADDRESS,
   },
+  "hoodi": {
+    id: 560048,
+    name: "Hoodi",
+    network: "hoodi",
+    nativeCurrency: {
+      name: "Hoodi",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: {
+        http: [import.meta.env.VITE_HOODI_URL],
+      },
+    },
+    blockExplorers: {
+      default: {
+        name: "Hoodi Explorer",
+        url: "https://eth-hoodi.blockscout.com",
+      },
+    },
+    contractAddress: ETH_HOODI_FAUCET_ADDRESS,
+  }
 };
 
 export function getNetworkConfig(networkKey) {
