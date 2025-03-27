@@ -238,7 +238,7 @@ export default function FaucetDetails() {
       setServerDripTxHash(data.tx_hash);
       
       // Start cooldown timer
-      setCooldownSeconds(30);
+      setCooldownSeconds(20);
       setCooldownActive(true);
       
       // Refetch faucet details after successful drip
@@ -563,7 +563,7 @@ export default function FaucetDetails() {
                     </div>
                     <div className="drip-info">
                       {cooldownActive 
-                        ? `Cooldown active: Please wait ${cooldownSeconds} seconds before requesting again` 
+                        ? `You may drip again, but please only take what you need!` 
                         : `${faucetDetails.dripAmount} ETH will be sent to your address on the ${SUPPORTED_NETWORKS[selectedNetwork]?.name || selectedNetwork} network`}
                     </div>
                     {serverDripSuccess && (

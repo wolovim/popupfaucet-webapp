@@ -13,15 +13,49 @@ import './App.css';
 const queryClient = new QueryClient();
 
 function AppHeader() {
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  
   return (
     <header>
       <div className="title-container">
-        <h1>popupfaucet</h1>
+        <div className="title-with-info">
+          <h1>popupfaucet</h1>
+          <button 
+            className="info-link"
+            onClick={() => setShowInfoModal(true)}
+          >
+            What is this?
+          </button>
+        </div>
       </div>
       <div className="header-controls">
         <ThemeToggle />
         <ConnectWallet />
       </div>
+      
+      {showInfoModal && (
+        <div className="modal-overlay" onClick={() => setShowInfoModal(false)}>
+          <div className="info-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <button className="modal-close" onClick={() => setShowInfoModal(false)}>×</button>
+            </div>
+            <div className="modal-content">
+              <p><span className="app-name">popupfaucet</span> <b>enables anyone to create and manage their own testnet faucets.</b></p>
+              <p>
+                Unlike traditional public faucets that need complex anti-abuse measures, popupfaucet
+                relies on trust within small communities to distribute funds efficiently.
+              </p>
+              <p>
+                If you know the name of a faucet, you can freely request funds from it.
+              </p>
+              <p>
+                Create a faucet for your team, community, or workshop and distribute tokens
+                without the constraints of public faucets.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
