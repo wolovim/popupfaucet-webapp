@@ -202,7 +202,7 @@ export default function FaucetDetails() {
     setServerDripTxHash(null);
     
     try {
-      const serverUrl = import.meta.env.VITE_SERVER_URL;
+      const serverUrl = import.meta.env.VITE_PF_SERVER_URL;
       if (!serverUrl) {
         throw new Error('Server URL is not configured. Please check your environment variables.');
       }
@@ -254,7 +254,7 @@ export default function FaucetDetails() {
       } else if (err.message.includes('CORS')) {
         setServerDripError('CORS error: The server is not configured to accept requests from this domain.');
       } else {
-        setServerDripError(err.message || 'Failed to process drip request');
+        setServerDripError(err.message || 'Failed to process drip request. Please try again.');
       }
     } finally {
       setServerDripLoading(false);

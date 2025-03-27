@@ -45,9 +45,11 @@ export default function NetworkTypeahead({ selectedNetwork, onChange, id }) {
     }
   };
   
-  const filteredNetworks = Object.entries(SUPPORTED_NETWORKS).filter(([_, network]) => 
-    network.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredNetworks = Object.entries(SUPPORTED_NETWORKS)
+    .filter(([_, network]) => 
+      network.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => a[1].name.localeCompare(b[1].name)); // Sort alphabetically by network name
   
   return (
     <div className="network-typeahead" ref={dropdownRef}>

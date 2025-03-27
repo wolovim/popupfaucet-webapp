@@ -19,7 +19,11 @@ function AppHeader() {
     <header>
       <div className="title-container">
         <div className="title-with-info">
-          <h1>popupfaucet</h1>
+          <h1>
+            {'popupfaucet'.split('').map((letter, index) => (
+              <span key={index}>{letter}</span>
+            ))}
+          </h1>
           <button 
             className="info-link"
             onClick={() => setShowInfoModal(true)}
@@ -100,7 +104,9 @@ function AppContent() {
             <span>EF Python Team</span>
           </div>
           <div className="footer-right">
-            <img src="/snek.svg" alt="Snakey Logo" className="footer-logo" />
+            <div className="logo-container">
+              <img src="/snek.svg" alt="Snakey Logo" className="footer-logo" />
+            </div>
             <div className="social-links">
               <a href="https://github.com/ethereum/web3.py" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="social-icon">
